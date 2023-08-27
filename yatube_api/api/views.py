@@ -1,8 +1,8 @@
-from rest_framework import viewsets, filters, permissions
+from rest_framework import viewsets, status, filters, permissions
+from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework import generics, mixins
 
-from posts.models import Post, Group, Comment
+from posts.models import Post, Group, Comment, Follow
 from .serializers import (CommentSerializer, FollowSerializer,
                           GroupSerializer, PostSerializer)
 from .permissions import OwnerOnly
@@ -18,9 +18,12 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class GroupListView(generics.ListAPIView):
+class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -38,20 +41,15 @@ class CommentViewSet(viewsets.ModelViewSet):
                         post=post)
 
 
-class FollowListCreateView(mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           generics.GenericAPIView):
+class FollowViewSet(viewsets.ModelViewSet):
     serializer_class = FollowSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
     permission_classes = (permissions.IsAuthenticated, OwnerOnly)
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        user = self.request.user
-        return user.followings.all()
+        return self.request.user.followings.all()
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
