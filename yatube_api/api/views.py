@@ -53,7 +53,7 @@ class FollowListView(
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('following__username',)
+    search_fields = ('followings__username',)
     permission_classes = (permissions.IsAuthenticated, OwnerOnly)
 
     def get_queryset(self):
