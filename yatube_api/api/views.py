@@ -54,13 +54,3 @@ class FollowListView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        search_username = self.request.query_params.get('search')
-        if search_username:
-            queryset = queryset.filter(
-                following__username=search_username)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
