@@ -47,7 +47,7 @@ class FollowListView(generics.ListCreateAPIView):
     serializer_class = FollowSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, OwnerOnly)
 
     def get_queryset(self):
         return self.request.user.followings.all()
