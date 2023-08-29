@@ -1,4 +1,9 @@
-from rest_framework import viewsets, status, filters, permissions, generics
+from rest_framework import (viewsets,
+                            status,
+                            filters,
+                            permissions,
+                            generics,
+                            mixins)
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -42,7 +47,9 @@ class CommentViewSet(viewsets.ModelViewSet):
                         post=post)
 
 
-class FollowListView(generics.ListCreateAPIView):
+class FollowListView(
+    mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView
+):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     filter_backends = (filters.SearchFilter,)
@@ -50,7 +57,13 @@ class FollowListView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated, OwnerOnly)
 
     def get_queryset(self):
-        return self.request.user.followings.all()
+        return Follow.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
