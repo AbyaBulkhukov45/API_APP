@@ -47,11 +47,20 @@ class FollowListView(generics.ListCreateAPIView):
     serializer_class = FollowSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
-    permission_classes = (permissions.IsAuthenticated, OwnerOnly)
-    pagination_class = LimitOffsetPagination
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         return self.request.user.followings.all()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        search_username = self.request.query_params.get('search')
+        if search_username:
+            queryset = queryset.filter(following__username__icontains=search_username)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
