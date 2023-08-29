@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, filters, permissions
+from rest_framework import viewsets, status, filters, permissions, generics
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -21,6 +21,7 @@ class PostViewSet(viewsets.ModelViewSet):
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    http_method_names = ['get']
 
     def create(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -41,16 +42,17 @@ class CommentViewSet(viewsets.ModelViewSet):
                         post=post)
 
 
-class FollowViewSet(viewsets.ModelViewSet):
+class FollowListView(generics.ListCreateAPIView):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
     permission_classes = (permissions.IsAuthenticated, OwnerOnly)
-    http_method_names = ['get', 'post']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        return Follow.objects.filter(user=self.request.user)
+        return self.request.user.followings.all()
+
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
