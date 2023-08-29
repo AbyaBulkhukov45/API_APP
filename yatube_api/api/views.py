@@ -60,7 +60,7 @@ class FollowListView(generics.ListCreateAPIView):
 
         search_username = self.request.query_params.get('search')
         if search_username:
-            queryset = queryset.filter(following__username__icontains=search_username)
-
+            queryset = queryset.filter(
+                following__username=search_username)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
