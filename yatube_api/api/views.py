@@ -57,11 +57,7 @@ class FollowListView(
     permission_classes = (permissions.IsAuthenticated, OwnerOnly)
 
     def get_queryset(self):
-        return Follow.objects.filter(user=self.request.user)
-        # return self.request.user.followings.all()
-        # вместо return Follow.objects.filter(user=self.request.user)
-        # Вот исправленная версия,извиняюсь что отправляю так,
-        # Тесты постоянно не довольны
+        return self.request.user.follower.all()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
